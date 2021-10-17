@@ -53,7 +53,7 @@ steps:
     event: tag
   commands:
   - chmod -R o-r-w-x- ./filestash
-  - tar -czf filestash-arm32v7-$DRONE_COMMIT.tar.gz ./filestash
+  - tar -czf filestash-arm32v7-${DRONE_COMMIT_SHA:0:7}.tar.gz ./filestash
 
 - name: release_publish
   image: plugins/github-release
@@ -63,10 +63,28 @@ steps:
   settings:
     api_key:
       from_secret: GITHUB_TOKEN
-    files: filestash-arm32v7-*.tar.gz
+    files: filestash-arm32v7-${DRONE_COMMIT_SHA:0:7}.tar.gz
     checksum:
       - md5
       - sha1
       - sha256
       - sha512
     prerelease: true
+
+- name: release_docker
+  image: plugins/docker
+  depends_on: [ release_publish ]
+  when:
+    event: tag
+  settings:
+    dockerfile: ./docker/Dockerfile
+    repo: tabbyjun/filestash-arm32v7
+    username:
+      from_secret: DOCKER_USERNAME
+    password:
+      from_secret: DOCKER_PASSWORD
+    tags:
+    - latest
+    - "${DRONE_COMMIT_SHA:0:7}"
+    build_args:
+    - TAG=${DRONE_TAG}
