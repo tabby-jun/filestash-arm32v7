@@ -1,4 +1,4 @@
-FROM debian:stable-slim
+FROM arm32v7/debian:stable-slim
 
 ARG TAG
 
